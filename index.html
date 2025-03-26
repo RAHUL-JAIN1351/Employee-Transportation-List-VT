@@ -24,21 +24,14 @@
             border-radius: 5px;
         }
 
-        /* Scrollable Table Container */
-        .table-container {
-            max-height: 400px; /* Adjust height as needed */
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            margin-top: 20px;
-        }
-
         table {
             width: 90%;
-            margin: 0 auto;
+            margin: 20px auto;
             border-collapse: collapse;
             background: white;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
+            overflow: hidden;
             opacity: 0;
             transform: scale(0.95);
             animation: fadeInTable 0.5s forwards 0.3s;
@@ -51,15 +44,6 @@
             }
         }
 
-        /* Sticky Table Header */
-        thead {
-            position: sticky;
-            top: 0;
-            background: #007bff;
-            color: white;
-            z-index: 1000;
-        }
-
         th, td {
             padding: 12px;
             border-bottom: 1px solid #ddd;
@@ -67,10 +51,11 @@
         }
 
         th {
+            background: #007bff;
+            color: white;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
         tr {
             opacity: 0;
             transform: translateY(10px);
@@ -105,27 +90,24 @@
     <input type="file" id="upload" accept=".xlsx, .xls">
 
     <h2>Area-wise Employee List, Count & Vehicle Suggestion</h2>
-
-    <div class="table-container">
-        <table id="areaTable">
-            <thead>
-                <tr>
-                    <th>Area</th>
-                    <th>No. of Employees</th>
-                    <th>Employee Name</th>
-                    <th>Suggested Vehicle</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td>Total Employees</td>
-                    <td id="totalEmployees">0</td>
-                    <td colspan="2"></td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
+    <table id="areaTable">
+        <thead>
+            <tr>
+                <th>Area</th>
+                <th>No. of Employees</th>
+                <th>Employee Name</th>
+                <th>Suggested Vehicle</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td>Total Employees</td>
+                <td id="totalEmployees">0</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
 
     <script>
         document.getElementById('upload').addEventListener('change', function(event) {
