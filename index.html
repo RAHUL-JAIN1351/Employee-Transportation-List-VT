@@ -1,79 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Pincode Vehicle Planning</title>
+<meta charset="UTF-8">
+<title>Pincode Vehicle Planning</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6fb;
-            margin: 20px;
-            text-align: center;
-        }
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6fb;
+    margin: 20px;
+    text-align: center;
+}
+h2 { color: #333; }
 
-        h2 { color: #333; }
+.upload-label, .download-btn {
+    padding: 12px 20px;
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-block;
+    margin: 10px;
+}
+.download-btn { background: #28a745; }
+.download-btn:disabled {
+    background: #9ccc9c;
+    cursor: not-allowed;
+}
 
-        .upload-label {
-            padding: 12px 20px;
-            background: #007bff;
-            color: white;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
+input[type="file"] { display: none; }
 
-        input[type="file"] { display: none; }
+.summary {
+    width: 90%;
+    margin: 20px auto;
+    display: flex;
+    justify-content: space-around;
+}
+.summary div {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    font-weight: bold;
+    width: 20%;
+}
 
-        .summary {
-            width: 90%;
-            margin: 20px auto;
-            display: flex;
-            justify-content: space-around;
-            gap: 10px;
-        }
-
-        .summary div {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            font-weight: bold;
-            width: 20%;
-        }
-
-        table {
-            width: 95%;
-            margin: 25px auto;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,.1);
-        }
-
-        th, td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-
-        th {
-            background: #007bff;
-            color: white;
-            text-transform: uppercase;
-        }
-
-        tr:nth-child(even) { background: #f9f9f9; }
-
-        .total-row {
-            background: #007bff;
-            color: white;
-            font-weight: bold;
-        }
-    </style>
+table {
+    width: 95%;
+    margin: 25px auto;
+    border-collapse: collapse;
+    background: white;
+}
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+th {
+    background: #007bff;
+    color: white;
+}
+.total-row {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+}
+</style>
 </head>
 
 <body>
@@ -81,11 +76,14 @@
 <h2>Upload Employee Excel</h2>
 
 <label class="upload-label">
-    📁 Choose Excel File
-    <input type="file" id="upload" accept=".xlsx,.xls">
+📁 Choose Excel File
+<input type="file" id="upload" accept=".xlsx,.xls">
 </label>
 
-<!-- SUMMARY SECTION -->
+<button class="download-btn" id="downloadBtn" disabled>
+⬇ Download Result (Excel)
+</button>
+
 <div class="summary">
     <div>🚗 Sedan<br><span id="sedanCount">0</span></div>
     <div>🚙 SUV<br><span id="suvCount">0</span></div>
@@ -96,75 +94,64 @@
 <h2>Pincode-wise Vehicle Allocation</h2>
 
 <table id="resultTable">
-    <thead>
-        <tr>
-            <th>PIN CODE</th>
-            <th>EMP COUNT</th>
-            <th>EMPLOYEE ID</th>
-            <th>VEHICLE</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-        <tr class="total-row">
-            <td>Total Employees</td>
-            <td id="totalEmployees">0</td>
-            <td colspan="2"></td>
-        </tr>
-    </tfoot>
+<thead>
+<tr>
+    <th>PIN CODE</th>
+    <th>EMP COUNT</th>
+    <th>EMPLOYEE NAME</th>
+    <th>VEHICLE</th>
+</tr>
+</thead>
+<tbody></tbody>
+<tfoot>
+<tr class="total-row">
+    <td>Total Employees</td>
+    <td id="totalEmployees">0</td>
+    <td colspan="2"></td>
+</tr>
+</tfoot>
 </table>
 
 <script>
-document.getElementById("upload").addEventListener("change", function (e) {
+let exportData = [];
 
-    let file = e.target.files[0];
-    let reader = new FileReader();
+document.getElementById("upload").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
 
-    reader.onload = function (e) {
-
-        let data = new Uint8Array(e.target.result);
-        let workbook = XLSX.read(data, { type: "array" });
-        let sheet = workbook.Sheets[workbook.SheetNames[0]];
-        let rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }).slice(1);
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }).slice(1);
 
         let pincodeMap = {};
+        exportData = [];
         let totalEmployees = 0;
+        let vehicleSummary = { Sedan: 0, SUV: 0, TT: 0, Bus: 0 };
 
-        // RESET SUMMARY COUNTS
-        let vehicleSummary = {
-            Sedan: 0,
-            SUV: 0,
-            TT: 0,
-            Bus: 0
-        };
-
-        // GROUP BY PINCODE (COLUMN INDEX 5)
         rows.forEach(row => {
-            let empId = row[1];
-            let pincode = row[5];
-
-            if (empId && pincode) {
+            const empName = row[2]; // EMPLOYEE NAME
+            const pincode = row[6]; // PIN CODE
+            if (empName && pincode) {
                 if (!pincodeMap[pincode]) pincodeMap[pincode] = [];
-                pincodeMap[pincode].push(empId);
+                pincodeMap[pincode].push(empName);
                 totalEmployees++;
             }
         });
 
-        let tbody = document.querySelector("#resultTable tbody");
+        const tbody = document.querySelector("#resultTable tbody");
         tbody.innerHTML = "";
 
         Object.keys(pincodeMap).forEach(pincode => {
-
             let employees = [...pincodeMap[pincode]];
 
-            // FIRST GROUP → MAX 44 (BUS)
             if (employees.length > 44) {
                 let busGroup = employees.splice(0, 44);
                 vehicleSummary.Bus++;
-                renderGroup(pincode, busGroup, "🚌 Bus");
+                renderGroup(pincode, busGroup, "Bus");
             }
 
-            // REMAINING EMPLOYEES
             if (employees.length > 0) {
                 let vehicle = suggestVehicle(employees.length);
                 vehicleSummary[vehicle]++;
@@ -172,36 +159,41 @@ document.getElementById("upload").addEventListener("change", function (e) {
             }
         });
 
-        // UPDATE SUMMARY UI
         document.getElementById("sedanCount").innerText = vehicleSummary.Sedan;
         document.getElementById("suvCount").innerText = vehicleSummary.SUV;
         document.getElementById("ttCount").innerText = vehicleSummary.TT;
         document.getElementById("busCount").innerText = vehicleSummary.Bus;
-
         document.getElementById("totalEmployees").innerText = totalEmployees;
+
+        document.getElementById("downloadBtn").disabled = false;
     };
 
     reader.readAsArrayBuffer(file);
 });
 
 function renderGroup(pincode, employees, vehicle) {
-    let tbody = document.querySelector("#resultTable tbody");
-    let count = employees.length;
+    const tbody = document.querySelector("#resultTable tbody");
+    const count = employees.length;
 
-    employees.forEach((empId, index) => {
-        let tr = document.createElement("tr");
+    employees.forEach((name, index) => {
+        exportData.push({
+            "PIN CODE": pincode,
+            "EMP COUNT": count,
+            "EMPLOYEE NAME": name,
+            "VEHICLE": vehicle
+        });
 
+        const tr = document.createElement("tr");
         if (index === 0) {
             tr.innerHTML = `
                 <td rowspan="${count}">${pincode}</td>
                 <td rowspan="${count}">${count}</td>
-                <td>${empId}</td>
+                <td>${name}</td>
                 <td rowspan="${count}">${vehicle}</td>
             `;
         } else {
-            tr.innerHTML = `<td>${empId}</td>`;
+            tr.innerHTML = `<td>${name}</td>`;
         }
-
         tbody.appendChild(tr);
     });
 }
@@ -212,6 +204,35 @@ function suggestVehicle(count) {
     if (count <= 12) return "TT";
     return "Bus";
 }
+
+/* ✅ GUARANTEED CSV DOWNLOAD */
+document.getElementById("downloadBtn").addEventListener("click", function () {
+
+    if (exportData.length === 0) {
+        alert("No data to download");
+        return;
+    }
+
+    let csv = "";
+    const headers = Object.keys(exportData[0]);
+    csv += headers.join(",") + "\n";
+
+    exportData.forEach(row => {
+        csv += headers.map(h => `"${row[h]}"`).join(",") + "\n";
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Vehicle_Planning_Result.csv";
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
 </script>
 
 </body>
