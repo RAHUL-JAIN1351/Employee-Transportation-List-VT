@@ -177,7 +177,6 @@ function renderGroup(pincode, employees, vehicle) {
 
     employees.forEach((name, index) => {
 
-        /* ===== EXPORT DATA (UI-LIKE EXCEL) ===== */
         exportData.push({
             "PIN CODE": index === 0 ? pincode : "",
             "EMP COUNT": index === 0 ? count : "",
@@ -185,7 +184,6 @@ function renderGroup(pincode, employees, vehicle) {
             "VEHICLE": index === 0 ? vehicle : ""
         });
 
-        /* ===== UI TABLE ===== */
         const tr = document.createElement("tr");
         if (index === 0) {
             tr.innerHTML = `
@@ -200,6 +198,7 @@ function renderGroup(pincode, employees, vehicle) {
         tbody.appendChild(tr);
     });
 }
+
 
 
 
@@ -228,11 +227,45 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
         { wch: 12 }
     ];
 
+    ws["!merges"] = [];
+
+    let rowIndex = 1; // Excel row index (0 = header)
+
+    exportData.forEach((row, i) => {
+
+        if (row["PIN CODE"]) {
+            const groupSize = row["EMP COUNT"];
+            const start = rowIndex;
+            const end = rowIndex + groupSize - 1;
+
+            // PIN CODE
+            ws["!merges"].push({
+                s: { r: start, c: 0 },
+                e: { r: end, c: 0 }
+            });
+
+            // EMP COUNT
+            ws["!merges"].push({
+                s: { r: start, c: 1 },
+                e: { r: end, c: 1 }
+            });
+
+            // VEHICLE
+            ws["!merges"].push({
+                s: { r: start, c: 3 },
+                e: { r: end, c: 3 }
+            });
+
+            rowIndex += groupSize;
+        }
+    });
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Vehicle Planning");
 
     XLSX.writeFile(wb, "Vehicle_Planning_Result.xlsx");
 });
+
 
 
 
