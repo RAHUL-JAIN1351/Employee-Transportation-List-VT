@@ -221,39 +221,45 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
     const ws = XLSX.utils.json_to_sheet(exportData);
 
     ws["!cols"] = [
-        { wch: 12 },
-        { wch: 12 },
-        { wch: 40 },
-        { wch: 12 }
+        { wch: 12 }, // PIN CODE
+        { wch: 12 }, // EMP COUNT
+        { wch: 40 }, // EMPLOYEE NAME
+        { wch: 12 }  // VEHICLE
     ];
 
     ws["!merges"] = [];
 
-    let rowIndex = 1; // Excel row index (0 = header)
+    let rowIndex = 1; // start after header (row 0)
 
-    exportData.forEach((row, i) => {
+    exportData.forEach(row => {
 
         if (row["PIN CODE"]) {
+
             const groupSize = row["EMP COUNT"];
             const start = rowIndex;
             const end = rowIndex + groupSize - 1;
 
-            // PIN CODE
-            ws["!merges"].push({
-                s: { r: start, c: 0 },
-                e: { r: end, c: 0 }
-            });
+            // Merge PIN CODE
+            ws["!merges"].push({ s: { r: start, c: 0 }, e: { r: end, c: 0 } });
+            // Merge EMP COUNT
+            ws["!merges"].push({ s: { r: start, c: 1 }, e: { r: end, c: 1 } });
+            // Merge VEHICLE
+            ws["!merges"].push({ s: { r: start, c: 3 }, e: { r: end, c: 3 } });
 
-            // EMP COUNT
-            ws["!merges"].push({
-                s: { r: start, c: 1 },
-                e: { r: end, c: 1 }
-            });
-
-            // VEHICLE
-            ws["!merges"].push({
-                s: { r: start, c: 3 },
-                e: { r: end, c: 3 }
+            // Apply alignment to merged cells (top-left cell)
+            [
+                { r: start, c: 0 },
+                { r: start, c: 1 },
+                { r: start, c: 3 }
+            ].forEach(cell => {
+                const addr = XLSX.utils.encode_cell(cell);
+                ws[addr] = ws[addr] || {};
+                ws[addr].s = {
+                    alignment: {
+                        vertical: "center",
+                        horizontal: "center"
+                    }
+                };
             });
 
             rowIndex += groupSize;
@@ -265,6 +271,7 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
 
     XLSX.writeFile(wb, "Vehicle_Planning_Result.xlsx");
 });
+
 
 
 
