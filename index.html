@@ -217,29 +217,36 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
         return;
     }
 
-    let csv = "";
-    const headers = Object.keys(exportData[0]);
-    csv += headers.join(",") + "\n";
+    /* Create worksheet */
+    const ws = XLSX.utils.json_to_sheet(exportData);
 
-    exportData.forEach(row => {
-        csv += headers.map(h => {
-            let val = row[h] ?? "";
-            return `"${val.replace(/"/g, '""')}"`;
-        }).join(",") + "\n";
-    });
+    /* Enable wrap text for EMPLOYEE NAME column */
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: 2 }); // EMPLOYEE NAME column
+        if (ws[cellAddress]) {
+            ws[cellAddress].s = {
+                alignment: { wrapText: true, vertical: "top" }
+            };
+        }
+    }
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    /* Auto column width */
+    ws["!cols"] = [
+        { wch: 12 }, // PIN CODE
+        { wch: 12 }, // EMP COUNT
+        { wch: 40 }, // EMPLOYEE NAME
+        { wch: 12 }  // VEHICLE
+    ];
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Vehicle_Planning_Result.csv";
-    document.body.appendChild(a);
-    a.click();
+    /* Create workbook */
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Vehicle Planning");
 
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    /* Download */
+    XLSX.writeFile(wb, "Vehicle_Planning_Result.xlsx");
 });
+
 
 </script>
 
