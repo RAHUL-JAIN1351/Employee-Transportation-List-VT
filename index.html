@@ -175,15 +175,10 @@ function renderGroup(pincode, employees, vehicle) {
     const tbody = document.querySelector("#resultTable tbody");
     const count = employees.length;
 
+    /* ===== UI TABLE ===== */
     employees.forEach((name, index) => {
-        exportData.push({
-            "PIN CODE": pincode,
-            "EMP COUNT": count,
-            "EMPLOYEE NAME": name,
-            "VEHICLE": vehicle
-        });
-
         const tr = document.createElement("tr");
+
         if (index === 0) {
             tr.innerHTML = `
                 <td rowspan="${count}">${pincode}</td>
@@ -196,7 +191,16 @@ function renderGroup(pincode, employees, vehicle) {
         }
         tbody.appendChild(tr);
     });
+
+    /* ===== EXPORT (MERGED NAMES – ONE BELOW OTHER) ===== */
+    exportData.push({
+        "PIN CODE": pincode,
+        "EMP COUNT": count,
+        "EMPLOYEE NAME": employees.join("\n"),
+        "VEHICLE": vehicle
+    });
 }
+
 
 function suggestVehicle(count) {
     if (count <= 4) return "Sedan";
@@ -218,7 +222,10 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
     csv += headers.join(",") + "\n";
 
     exportData.forEach(row => {
-        csv += headers.map(h => `"${row[h]}"`).join(",") + "\n";
+        csv += headers.map(h => {
+            let val = row[h] ?? "";
+            return `"${val.replace(/"/g, '""')}"`;
+        }).join(",") + "\n";
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -233,6 +240,7 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 });
+
 </script>
 
 </body>
