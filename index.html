@@ -192,14 +192,16 @@ function renderGroup(pincode, employees, vehicle) {
         tbody.appendChild(tr);
     });
 
-    /* ===== EXPORT (MERGED NAMES – ONE BELOW OTHER) ===== */
+    /* ===== EXPORT (EXCEL LINE BREAKS) ===== */
     exportData.push({
         "PIN CODE": pincode,
         "EMP COUNT": count,
-        "EMPLOYEE NAME": employees.join("\n"),
+        // Excel requires CRLF for visible new lines
+        "EMPLOYEE NAME": employees.join("\r\n"),
         "VEHICLE": vehicle
     });
 }
+
 
 
 function suggestVehicle(count) {
@@ -217,35 +219,42 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
         return;
     }
 
-    /* Create worksheet */
     const ws = XLSX.utils.json_to_sheet(exportData);
 
-    /* Enable wrap text for EMPLOYEE NAME column */
     const range = XLSX.utils.decode_range(ws["!ref"]);
+
+    // Force wrap + increase row height
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: 2 }); // EMPLOYEE NAME column
-        if (ws[cellAddress]) {
-            ws[cellAddress].s = {
-                alignment: { wrapText: true, vertical: "top" }
+
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: 2 }); // EMPLOYEE NAME
+        if (ws[cellAddr]) {
+            ws[cellAddr].s = {
+                alignment: {
+                    wrapText: true,
+                    vertical: "top"
+                }
             };
         }
+
+        // Auto row height based on line count
+        const lineCount = exportData[R - 1]["EMPLOYEE NAME"].split("\r\n").length;
+        ws["!rows"] = ws["!rows"] || [];
+        ws["!rows"][R] = { hpt: Math.max(20, lineCount * 15) };
     }
 
-    /* Auto column width */
     ws["!cols"] = [
-        { wch: 12 }, // PIN CODE
-        { wch: 12 }, // EMP COUNT
-        { wch: 40 }, // EMPLOYEE NAME
-        { wch: 12 }  // VEHICLE
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 40 },
+        { wch: 12 }
     ];
 
-    /* Create workbook */
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Vehicle Planning");
 
-    /* Download */
     XLSX.writeFile(wb, "Vehicle_Planning_Result.xlsx");
 });
+
 
 
 </script>
