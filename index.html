@@ -194,12 +194,12 @@ function renderGroup(pincode, employees, vehicle) {
 
     /* ===== EXPORT (EXCEL LINE BREAKS) ===== */
     exportData.push({
-        "PIN CODE": pincode,
-        "EMP COUNT": count,
-        // Excel requires CRLF for visible new lines
-        "EMPLOYEE NAME": employees.join("\r\n"),
-        "VEHICLE": vehicle
-    });
+    "PIN CODE": pincode,
+    "EMP COUNT": count,
+    "EMPLOYEE NAME": employees.join("\n"),
+    "VEHICLE": vehicle
+});
+
 }
 
 
@@ -221,31 +221,11 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
 
     const ws = XLSX.utils.json_to_sheet(exportData);
 
-    const range = XLSX.utils.decode_range(ws["!ref"]);
-
-    // Force wrap + increase row height
-    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-
-        const cellAddr = XLSX.utils.encode_cell({ r: R, c: 2 }); // EMPLOYEE NAME
-        if (ws[cellAddr]) {
-            ws[cellAddr].s = {
-                alignment: {
-                    wrapText: true,
-                    vertical: "top"
-                }
-            };
-        }
-
-        // Auto row height based on line count
-        const lineCount = exportData[R - 1]["EMPLOYEE NAME"].split("\r\n").length;
-        ws["!rows"] = ws["!rows"] || [];
-        ws["!rows"][R] = { hpt: Math.max(20, lineCount * 15) };
-    }
-
+    // Set column width only
     ws["!cols"] = [
         { wch: 12 },
         { wch: 12 },
-        { wch: 40 },
+        { wch: 50 }, // EMPLOYEE NAME
         { wch: 12 }
     ];
 
@@ -254,6 +234,7 @@ document.getElementById("downloadBtn").addEventListener("click", function () {
 
     XLSX.writeFile(wb, "Vehicle_Planning_Result.xlsx");
 });
+
 
 
 
