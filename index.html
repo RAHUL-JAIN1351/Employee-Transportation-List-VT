@@ -144,20 +144,26 @@ document.getElementById("upload").addEventListener("change", function(e) {
         tbody.innerHTML = "";
 
         Object.keys(pincodeMap).forEach(pincode => {
-            let employees = [...pincodeMap[pincode]];
+        Object.keys(pincodeMap).forEach(pincode => {
 
-            if (employees.length > 44) {
-                let busGroup = employees.splice(0, 44);
-                vehicleSummary.Bus++;
-                renderGroup(pincode, busGroup, "Bus");
-            }
+    let employees = [...pincodeMap[pincode]];
 
-            if (employees.length > 0) {
-                let vehicle = suggestVehicle(employees.length);
-                vehicleSummary[vehicle]++;
-                renderGroup(pincode, employees, vehicle);
-            }
-        });
+    // 🔁 Keep splitting till employees <= 44
+    while (employees.length > 44) {
+        let busGroup = employees.splice(0, 44);
+        vehicleSummary.Bus++;
+        renderGroup(pincode, busGroup, "Bus");
+    }
+
+    // Remaining employees (≤ 44)
+    if (employees.length > 0) {
+        let vehicle = suggestVehicle(employees.length);
+        vehicleSummary[vehicle]++;
+        renderGroup(pincode, employees, vehicle);
+    }
+
+});
+
 
         document.getElementById("sedanCount").innerText = vehicleSummary.Sedan;
         document.getElementById("suvCount").innerText = vehicleSummary.SUV;
